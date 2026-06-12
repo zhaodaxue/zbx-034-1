@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Building } from "@/types";
 import { useReadStore } from "@/store/useReadStore";
+import { buildingHasWeekendConstruction } from "@/utils/calendarFilter";
 
 interface Props {
   building: Building | null;
@@ -30,6 +31,7 @@ export default function DetailDrawer({ building, onClose }: Props) {
 
   const read = statusMap[building.id]?.isRead ?? false;
   const typeStyle = typeStyles[building.constructionType];
+  const buildingHasWeekend = buildingHasWeekendConstruction(building);
 
   const sortedDates = [...building.constructionDates].sort();
 
@@ -100,7 +102,7 @@ export default function DetailDrawer({ building, onClose }: Props) {
                   <span className="text-sm font-medium text-gray-700">
                     共 {sortedDates.length} 天
                   </span>
-                  {building.involvesWeekend && (
+                  {buildingHasWeekend && (
                     <span className="text-xs text-warn-600 flex items-center gap-0.5 ml-auto bg-warn-500/10 px-2 py-0.5 rounded-full border border-warn-200">
                       <AlertTriangle className="w-3 h-3" /> 涉及周末
                     </span>

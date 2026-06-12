@@ -1,23 +1,32 @@
 import type { Building } from "@/types";
-import { formatDate } from "./calendarFilter";
+import { formatDate, isTodayStr, hasWeekendConstruction } from "./calendarFilter";
+
+type ViewMode = "day" | "all";
 
 export function sortBuildingsForDisplay(
   buildings: Building[],
-  selectedDate: string
+  selectedDate: string,
+  viewMode: ViewMode = "day"
 ): Building[] {
   const todayStr = formatDate(new Date());
-  const isSelectedToday = selectedDate === todayStr;
 
   return [...buildings].sort((a, b) => {
-    if (isSelectedToday) {
-      const aToday = a.constructionDates.includes(todayStr);
-      const bToday = b.constructionDates.includes(todayStr);
+    const aToday = a.constructionDates.includes(todayStr);
+    const bToday = b.constructionDates.includes(todayStr);
+    if (viewMode === "all") {
       if (aToday && !bToday) return -1;
       if (!aToday && bToday) return 1;
     }
 
-    if (a.involvesWeekend && !b.involvesWeekend) return -1;
-    if (!a.involvesWeekend && b.involvesWeekend) return 1;
+    const aSelectedDay = a.constructionDates.includes(selectedDate);
+    const bSelectedDay = b.constructionDates.includes(selectedDate);
+    if (aSelectedDay && !bSelectedDay) return -1;
+    if (!aSelectedDay && bSelectedDay) return 1;
+
+    const aWeekend = hasWeekendConstruction(a);
+    const bWeekend = hasWeekendConstruction(b);
+    if (aWeekend && !bWeekend) return -1;
+    if (!aWeekend && bWeekend) return 1;
 
     return a.name.localeCompare(b.name);
   });
@@ -29,5 +38,7 @@ export function countTodayBuildings(buildings: Building[]): number {
 }
 
 export function countWeekendBuildings(buildings: Building[]): number {
-  return buildings.filter((b) => b.involvesWeekend).length;
+  return buildings.filter((b) => hasWeekendConstruction(b)).length;
 }
+
+export { isTodayStr };

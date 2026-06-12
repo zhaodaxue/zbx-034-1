@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { Inbox, CalendarRange } from "lucide-react";
+import { Inbox, CalendarRange, Hammer, AlertTriangle, Layers } from "lucide-react";
 import type { Building } from "@/types";
 import BuildingCard from "./BuildingCard";
 import DetailDrawer from "./DetailDrawer";
 import { useCalendarStore } from "@/store/useCalendarStore";
-import { filterBuildingsByDate } from "@/utils/calendarFilter";
+import { filterBuildingsByDate, formatDate, hasWeekendConstruction } from "@/utils/calendarFilter";
 import { sortBuildingsForDisplay } from "@/utils/buildingSorter";
 
 interface Props {
@@ -13,23 +13,60 @@ interface Props {
 
 export default function BuildingList({ buildings }: Props) {
   const selectedDate = useCalendarStore((s) => s.selectedDate);
+  const viewMode = useCalendarStore((s) => s.viewMode);
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
 
   const displayBuildings = useMemo(() => {
-    const filtered = filterBuildingsByDate(buildings, selectedDate);
-    return sortBuildingsForDisplay(filtered, selectedDate);
-  }, [buildings, selectedDate]);
+    let source: Building[];
+    if (viewMode === "day") {
+      source = filterBuildingsByDate(buildings, selectedDate);
+    } else {
+      source = buildings;
+    }
+    return sortBuildingsForDisplay(source, selectedDate, viewMode);
+  }, [buildings, selectedDate, viewMode]);
+
+  const todayStr = formatDate(new Date());
+  const todayCount = useMemo(
+    () => displayBuildings.filter((b) => b.constructionDates.includes(todayStr)).length,
+    [displayBuildings, todayStr]
+  );
+  const weekendCount = useMemo(
+    () => displayBuildings.filter((b) => hasWeekendConstruction(b)).length,
+    [displayBuildings]
+  );
 
   return (
     <main className="container py-4 pb-20">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-          <CalendarRange className="w-4 h-4 text-primary-500" />
-          {selectedDate} 施工安排
+          {viewMode === "all" ? (
+            <>
+              <Layers className="w-4 h-4 text-primary-500" />
+              全部楼栋施工安排
+            </>
+          ) : (
+            <>
+              <CalendarRange className="w-4 h-4 text-primary-500" />
+              {selectedDate} 施工安排
+            </>
+          )}
         </h2>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-          {displayBuildings.length} 栋
-        </span>
+        <div className="flex items-center gap-2">
+          {todayCount > 0 && (
+            <span className="text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Hammer className="w-3 h-3" /> 今日{todayCount}栋
+            </span>
+          )}
+          {weekendCount > 0 && (
+            <span className="text-xs text-warn-600 bg-warn-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> 涉周末{weekendCount}栋
+            </span>
+          )}
+          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            {displayBuildings.length} 栋
+          </span>
+        </div>
       </div>
 
       {displayBuildings.length === 0 ? (
@@ -40,12 +77,17 @@ export default function BuildingList({ buildings }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {displayBuildings.map((b) => (
-            <BuildingCard
+          {displayBuildings.map((b, idx) => (
+            <div
               key={b.id}
-              building={b}
-              onClick={() => setActiveBuilding(b)}
-            />
+              className="animate-card-enter"
+              style={{ animationDelay: `${idx * 40}ms` }}
+            >
+              <BuildingCard
+                building={b}
+                onClick={() => setActiveBuilding(b)}
+              />
+            </div>
           ))}
         </div>
       )}

@@ -1,6 +1,7 @@
 import type { Building } from "@/types";
+import { hasWeekendDate } from "@/utils/calendarFilter";
 
-export const buildings: Building[] = [
+const rawBuildings: Omit<Building, "involvesWeekend">[] = [
   {
     id: "b1",
     name: "1号楼",
@@ -15,7 +16,6 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "09:00",
     timeSlotEnd: "11:30",
-    involvesWeekend: true,
     contactName: "张工",
     contactPhone: "138-0000-1001",
     description:
@@ -34,11 +34,10 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "08:30",
     timeSlotEnd: "11:00",
-    involvesWeekend: false,
     contactName: "李师傅",
     contactPhone: "138-0000-1002",
     description:
-      "2号楼进行自来水主管道更换工程，将拆除旧管道并铺设新型PPR管材。施工过程中会使用切割机、电锤等设备，可能产生间断性噪音。预计每日中午12点前完成当日作业。部分时段可能短暂停水，请提前储水备用。",
+      "2号楼进行自来水主管道更换工程，将拆除旧管道并铺设新型PPR管材。施工过程中会使用切割机、电锤等设备，可能产生间断性噪音。预计每日中午12点前完成当日作业。部分时段可能短暂停水，请提前储水备用。周末施工已报备，严格遵守允许时段。",
   },
   {
     id: "b3",
@@ -56,7 +55,6 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "09:30",
     timeSlotEnd: "12:00",
-    involvesWeekend: true,
     contactName: "王工程师",
     contactPhone: "138-0000-1003",
     description:
@@ -75,7 +73,6 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "09:00",
     timeSlotEnd: "11:30",
-    involvesWeekend: false,
     contactName: "赵工",
     contactPhone: "138-0000-1004",
     description:
@@ -93,7 +90,6 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "10:00",
     timeSlotEnd: "12:00",
-    involvesWeekend: true,
     contactName: "刘师傅",
     contactPhone: "138-0000-1005",
     description:
@@ -112,10 +108,14 @@ export const buildings: Building[] = [
     ],
     timeSlotStart: "09:00",
     timeSlotEnd: "11:00",
-    involvesWeekend: false,
     contactName: "陈工程师",
     contactPhone: "138-0000-1006",
     description:
-      "6号楼电梯更换工程，原老旧电梯已拆除，新电梯设备正在进场安装。施工内容包括曳引机安装、轿厢组装、线路调试等。施工噪音主要来自设备吊装和金属装配。工作日施工期间如遇特殊情况将提前张贴补充通知。",
+      "6号楼电梯更换工程，原老旧电梯已拆除，新电梯设备正在进场安装。施工内容包括曳引机安装、轿厢组装、线路调试等。施工噪音主要来自设备吊装和金属装配。施工日期跨周末，届时将严格按报备时段作业。",
   },
 ];
+
+export const buildings: Building[] = rawBuildings.map((b) => ({
+  ...b,
+  involvesWeekend: hasWeekendDate(b.constructionDates),
+}));

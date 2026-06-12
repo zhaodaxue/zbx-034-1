@@ -1,6 +1,6 @@
 import { AlertTriangle, Clock, Phone, Building2, Check } from "lucide-react";
 import type { Building } from "@/types";
-import { formatDate } from "@/utils/calendarFilter";
+import { formatDate, buildingHasWeekendConstruction } from "@/utils/calendarFilter";
 import { useReadStore } from "@/store/useReadStore";
 import { useCalendarStore } from "@/store/useCalendarStore";
 
@@ -21,14 +21,11 @@ export default function BuildingCard({ building, onClick }: Props) {
 
   const todayStr = formatDate(new Date());
   const hasConstructionToday = building.constructionDates.includes(todayStr);
-  const hasConstructionOnSelected = building.constructionDates.includes(selectedDate);
   const isSelectedToday = selectedDate === todayStr;
-  const showTopBadge = isSelectedToday && hasConstructionToday;
+  const showTodayBadge = isSelectedToday && hasConstructionToday;
   const read = statusMap[building.id]?.isRead ?? false;
   const typeStyle = typeStyles[building.constructionType];
-  const selectedDateObj = new Date(selectedDate + "T00:00:00");
-  const selectedIsWeekend = selectedDateObj.getDay() === 0 || selectedDateObj.getDay() === 6;
-  const showWeekendWarn = building.involvesWeekend && selectedIsWeekend && hasConstructionOnSelected;
+  const hasWeekend = buildingHasWeekendConstruction(building);
 
   return (
     <div
@@ -36,11 +33,11 @@ export default function BuildingCard({ building, onClick }: Props) {
       className={`
         relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300
         hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]
-        ${showTopBadge ? "ring-2 ring-primary-400 shadow-md" : "border border-gray-100 shadow-sm"}
+        ${showTodayBadge ? "ring-2 ring-primary-400 shadow-md" : "border border-gray-100 shadow-sm"}
       `}
     >
       <div className="flex">
-        {showWeekendWarn && (
+        {hasWeekend && (
           <div className="flex flex-col items-center justify-center bg-warn-500 w-12 shrink-0 py-4">
             <div className="flex flex-col items-center gap-1 text-white">
               <AlertTriangle className="w-6 h-6" />
@@ -49,7 +46,7 @@ export default function BuildingCard({ building, onClick }: Props) {
             </div>
           </div>
         )}
-        <div className={`flex-1 ${showWeekendWarn ? "p-4 pl-3" : "p-4"}`}>
+        <div className={`flex-1 ${hasWeekend ? "p-4 pl-3" : "p-4"}`}>
           <div className="flex items-start gap-3">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${typeStyle.bg} border ${typeStyle.border}`}>
               <Building2 className={`w-6 h-6 ${typeStyle.text}`} />
@@ -61,14 +58,14 @@ export default function BuildingCard({ building, onClick }: Props) {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${typeStyle.bg} ${typeStyle.text} font-medium border ${typeStyle.border}`}>
                   {typeStyle.label}施工
                 </span>
-                {showTopBadge && (
+                {showTodayBadge && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500 text-white font-medium animate-pulse">
                     今日施工
                   </span>
                 )}
-                {showWeekendWarn && (
+                {hasWeekend && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-warn-500/10 text-warn-600 font-medium flex items-center gap-0.5">
-                    <AlertTriangle className="w-3 h-3" /> 周末施工
+                    <AlertTriangle className="w-3 h-3" /> 含周末施工
                   </span>
                 )}
                 {read && (
